@@ -1,0 +1,32 @@
+{
+  "name": "sayla/utils",
+  "keywords": [
+    "sayla",
+    "laravel"
+  ],
+  "require": {
+    "php": ">=7.1",
+    "illuminate/contracts": "^5",
+    "illuminate/support": "^5",
+    "sayla/data-helper": "^1"
+  },
+  "require-dev": {
+  },
+  "autoload": {
+    "files": [
+      "helpers.php"
+    ],
+    "psr-4": {
+      "Sayla\\Util\\": "src/Util",
+      "Sayla\\Exception\\": "src/Exception",
+      "Sayla\\Contract\\": "src/Contract",
+      "Sayla\\Data\\": "src/Data"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Tests\\": "tests/"
+    }
+  },
+  "minimum-stability": "dev"
+}
