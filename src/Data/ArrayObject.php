@@ -5,7 +5,7 @@ namespace Sayla\Data;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Contracts\Support\Jsonable;
 use Sayla\Helper\Data\ArrayObject as BaseArrayObject;
-use Sayla\Support\JsonHelper;
+use Sayla\Util\JsonHelper;
 
 class ArrayObject extends BaseArrayObject implements Arrayable, Jsonable
 {
