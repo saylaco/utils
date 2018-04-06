@@ -10,6 +10,6 @@ class InvalidArgument extends \InvalidArgumentException implements Exception
 
     public function __construct($message, $previous = null)
     {
-        parent::__construct($message, static::$classCode, $previous);
+        parent::__construct($message, null, $previous);
     }
 }

@@ -10,6 +10,6 @@ class FileNotFoundException extends \UnexpectedValueException implements Excepti
 
     public function __construct($fileName, $previous = null)
     {
-        parent::__construct(sprintf("File '%s' not found", $fileName), static::$classCode, $previous);
+        parent::__construct(sprintf("File '%s' not found", $fileName), null, $previous);
     }
 }

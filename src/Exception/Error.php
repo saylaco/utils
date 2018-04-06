@@ -10,6 +10,6 @@ class Error extends \Exception implements Exception
 
     public function __construct($message, $previous = null, $code = null)
     {
-        parent::__construct($message, $code ?? static::$classCode, $previous);
+        parent::__construct($message, $code, $previous);
     }
 }

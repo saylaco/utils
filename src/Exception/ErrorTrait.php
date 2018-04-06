@@ -6,7 +6,6 @@ use Psr\Log\LoggerInterface;
 
 trait ErrorTrait
 {
-    protected static $classCode = 0;
     protected static $log = true;
     private static $logger;
     public $context = [];

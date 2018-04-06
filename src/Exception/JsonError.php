@@ -7,7 +7,6 @@ use Sayla\Contract\Exception;
 class JsonError extends \InvalidArgumentException implements Exception
 {
     use ErrorTrait;
-    protected static $classCode = 500;
     protected static $_messages = [
         JSON_ERROR_NONE => 'No error has occurred',
         JSON_ERROR_DEPTH => 'The maximum stack depth has been exceeded',
@@ -19,7 +18,7 @@ class JsonError extends \InvalidArgumentException implements Exception
 
     public function __construct(int $error, $previous = null)
     {
-        parent::__construct(static::$_messages[$error], static::$classCode, $previous);
+        parent::__construct(static::$_messages[$error], null, $previous);
         $this->withContext('json_error_code', $error);
     }
 }
