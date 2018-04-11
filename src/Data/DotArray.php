@@ -29,7 +29,7 @@ class DotArray extends ArrayObject
      */
     public function set($key, $value)
     {
-        $this->offsetSet($key, $value);
+        $this->put($key, $value);
         return $this;
     }
 
@@ -37,7 +37,7 @@ class DotArray extends ArrayObject
      * @param mixed $offset
      * @param mixed $value
      */
-    public function offsetSet($offset, $value)
+    public function put($offset, $value)
     {
         Arr::set($this->getArrayData(), $offset, $value);
     }
@@ -49,7 +49,7 @@ class DotArray extends ArrayObject
 
     public function __set($name, $value)
     {
-        return $this->offsetSet($name, $value);
+        $this->offsetSet($name, $value);
     }
 
     /**
