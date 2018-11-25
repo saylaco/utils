@@ -8,7 +8,7 @@
     "php": ">=7.1",
     "illuminate/contracts": "^5",
     "illuminate/support": "^5",
-    "sayla/data-helper": "@dev"
+    "sayla/data-helper": "^2"
   },
   "require-dev": {
   },
@@ -28,5 +28,6 @@
       "Tests\\": "tests/"
     }
   },
-  "minimum-stability": "dev"
+  "minimum-stability": "dev",
+  "description": ""
 }

@@ -4,9 +4,9 @@ namespace Sayla\Data;
 
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
-use Sayla\Support\Raw;
+use Sayla\Util\Raw;
 
-class JavascriptObject extends DotArray
+class JavascriptObject extends DotArrayObject
 {
     private $forceToObject = null;
 

@@ -2,8 +2,6 @@
 
 namespace Sayla\Exception;
 
-use Psr\Log\LoggerInterface;
-
 trait ErrorTrait
 {
     public $context = [];
