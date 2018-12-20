@@ -2,7 +2,6 @@
 
 
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Collection;
 use Illuminate\Support\HtmlString;
 
 if (!function_exists('make_new_instance')) {

@@ -1,4 +1,5 @@
 <?php
+
 namespace Sayla\Util;
 
 use Sayla\Exception\FileNotFoundException;
@@ -35,15 +36,6 @@ class JsonHelper
     }
 
     /**
-     * @param mixed $json
-     * @return array
-     */
-    public static function decodeToArray($json): array
-    {
-        return self::decode($json, true) ?? [];
-    }
-
-    /**
      * @param $json
      * @param bool $assoc
      * @return mixed
@@ -56,6 +48,15 @@ class JsonHelper
             return $result;
         }
         throw new JsonError(json_last_error());
+    }
+
+    /**
+     * @param mixed $json
+     * @return array
+     */
+    public static function decodeToArray($json): array
+    {
+        return self::decode($json, true) ?? [];
     }
 
     /**
@@ -72,7 +73,7 @@ class JsonHelper
     {
         $result = json_encode($value, $options);
 
-        if ($result || json_last_error() == JSON_ERROR_NONE) {
+        if (json_last_error() == JSON_ERROR_NONE) {
             return $result;
         }
 

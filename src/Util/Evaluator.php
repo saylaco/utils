@@ -1,14 +1,17 @@
 <?php
+
 namespace Sayla\Util;
 
 use Sayla\Exception\Error;
-use Sayla\Helper\Data\ArrayObject;
+use Sayla\Helper\Data\Contract\DecoratesAccessibleArray;
 
-class Evaluator extends ArrayObject
+class Evaluator implements \ArrayAccess
 {
+    use DecoratesAccessibleArray;
     protected $expression;
     protected $returnsValue = true;
     protected $endStatement = true;
+    protected $properties;
 
     /**
      * @param string $expression
@@ -17,7 +20,7 @@ class Evaluator extends ArrayObject
     public function __construct(string $expression, array $properties = [])
     {
         $this->expression = $expression;
-        parent::__construct($properties);
+        $this->properties = new \Sayla\Helper\Data\ArrayObject($properties);
     }
 
     /**
@@ -38,8 +41,7 @@ class Evaluator extends ArrayObject
     {
         $expression = $this->getExpression();
         try {
-            extract($this->toArray(), EXTR_PREFIX_INVALID & EXTR_PREFIX_SAME, 'evald');
-            return eval($expression);
+            return $this->doEvaluation($expression, $this->properties->toArray());
         } catch (\Throwable $exception) {
             throw (new Error('Failed to evaluate ' . var_export($expression, true), $exception))
                 ->withExtra($exception->getMessage());
@@ -70,6 +72,17 @@ class Evaluator extends ArrayObject
 
     /**
      * @param string $expression
+     * @return mixed
+     */
+    private function doEvaluation(string $expression, array $properties)
+    {
+        extract($properties, EXTR_PREFIX_INVALID & EXTR_PREFIX_SAME, 'evald');
+        $result = eval($expression);
+        return $result;
+    }
+
+    /**
+     * @param string $expression
      * @param mixed[] $vars
      * @return self
      */
@@ -94,6 +107,11 @@ class Evaluator extends ArrayObject
 
     }
 
+    protected function getDecoratedArray(): \ArrayAccess
+    {
+        return $this->properties;
+    }
+
     /**
      * @param bool|true $shouldPrependReturn
      * @return $this
@@ -104,5 +122,4 @@ class Evaluator extends ArrayObject
         return $this;
 
     }
-
 }

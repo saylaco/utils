@@ -1,4 +1,5 @@
 <?php
+
 namespace Sayla\Util;
 
 abstract class Hints

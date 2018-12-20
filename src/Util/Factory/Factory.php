@@ -32,11 +32,6 @@ abstract class Factory
         return $this->instances[$name];
     }
 
-    public function isSupported(string $name): bool
-    {
-        return $this->hasInstance($name) || $this->hasResolver($name);
-    }
-
     /**
      * @param string $name
      * @return bool
@@ -44,6 +39,11 @@ abstract class Factory
     protected function hasInstance(string $name): bool
     {
         return isset($this->instances[$name]);
+    }
+
+    public function isSupported(string $name): bool
+    {
+        return $this->hasInstance($name) || $this->hasResolver($name);
     }
 
     /**
