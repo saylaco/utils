@@ -11,31 +11,14 @@ class DotArrayObject extends ArrayObject
     use AccessArrayItemsAsObjectProperties;
 
     /** @noinspection PhpMissingParentConstructorInspection */
-    public function __construct(array $input = [])
+    public function __construct(iterable $input = [])
     {
         $this->fill($input);
     }
 
-    /**
-     * @param array|\Traversable $input
-     * @return $this
-     */
-    public function fill($input)
+    public static function __set_state($data)
     {
-        foreach ($input as $k => $v)
-            $this->set($k, $v);
-        return $this;
-    }
-
-    /**
-     * @param $key
-     * @param $value
-     * @return $this
-     */
-    public function set($key, $value)
-    {
-        $this->put($key, $value);
-        return $this;
+        return new static($data['items']);
     }
 
     /**
@@ -60,13 +43,14 @@ class DotArrayObject extends ArrayObject
     }
 
     /**
-     * @param string $key
-     * @param mixed $default
-     * @return mixed
+     * @param array|\Traversable $input
+     * @return $this
      */
-    public function get($key, $default = null)
+    public function fill($input)
     {
-        return $this->offsetGet($key) ?? $default;
+        foreach ($input as $k => $v)
+            $this->set($k, $v);
+        return $this;
     }
 
     /**
@@ -75,79 +59,11 @@ class DotArrayObject extends ArrayObject
      */
     public function fillIf($input)
     {
-        foreach (array_dot($input) as $k => $v)
+        foreach (Arr::dot($input) as $k => $v)
             if (!$this->has($k)) {
                 $this->set($k, $v);
             }
         return $this;
-    }
-
-    /**
-     * @param string $key
-     * @return bool
-     */
-    public function has($key)
-    {
-        return $this->offsetExists($key);
-    }
-
-    public function offsetExists($offset)
-    {
-        return Arr::has($this->getArrayData(), $offset);
-    }
-
-    /**
-     * @param mixed $offset
-     * @return DotArrayObject
-     */
-    public function offsetGet($offset)
-    {
-        return Arr::get($this->getArrayData(), $offset);
-    }
-
-    /**
-     * @param mixed $offset
-     */
-    public function offsetUnset($offset)
-    {
-        $this->forget($offset);
-    }
-
-    /**
-     * @param $value
-     * @return $this
-     */
-    public function push($value)
-    {
-        array_push($this->getArrayData(), $value);
-        return $this;
-    }
-
-    /**
-     * @param mixed $offset
-     * @param mixed $value
-     */
-    public function put($offset, $value)
-    {
-        Arr::set($this->getArrayData(), $offset, $value);
-    }
-
-    /**
-     * Get the instance as an array.
-     *
-     * @return array
-     */
-    public function toArray()
-    {
-        $dataArray = [];
-        foreach (parent::toArray() as $k => $v) {
-            if ($v instanceof Arrayable) {
-                $dataArray[$k] = $v->toArray();
-            } else {
-                $dataArray[$k] = $v;
-            }
-        }
-        return $dataArray;
     }
 
     /**
@@ -158,6 +74,16 @@ class DotArrayObject extends ArrayObject
     {
         Arr::forget($this->getArrayData(), $offset);
         return $this;
+    }
+
+    /**
+     * @param string $key
+     * @param mixed $default
+     * @return mixed
+     */
+    public function get($key, $default = null)
+    {
+        return $this->offsetGet($key) ?? $default;
     }
 
     /**
@@ -193,6 +119,15 @@ class DotArrayObject extends ArrayObject
         return array_keys($this->get($key, [])) ?: $default;
     }
 
+    /**
+     * @param string $key
+     * @return bool
+     */
+    public function has($key)
+    {
+        return $this->offsetExists($key);
+    }
+
     public function isEmpty()
     {
         return $this->count() == 0;
@@ -219,6 +154,37 @@ class DotArrayObject extends ArrayObject
         return $this;
     }
 
+    public function offsetExists($offset)
+    {
+        return Arr::has($this->getArrayData(), $offset);
+    }
+
+    /**
+     * @param mixed $offset
+     * @return DotArrayObject
+     */
+    public function offsetGet($offset)
+    {
+        return Arr::get($this->getArrayData(), $offset);
+    }
+
+    /**
+     * @param mixed $offset
+     */
+    public function offsetUnset($offset)
+    {
+        $this->forget($offset);
+    }
+
+    /**
+     * @param string ...$offsets
+     * @return static
+     */
+    public function only(string ...$offsets)
+    {
+        return new static(Arr::only($this->getArrayData(), $offsets));
+    }
+
     /**
      * @param array $values
      * @return $this
@@ -240,15 +206,12 @@ class DotArrayObject extends ArrayObject
     }
 
     /**
-     * @param string $groupKey
-     * @param mixed $item
-     * @param string|null $itemKey
+     * @param $value
      * @return $this
      */
-    public function pushUniqueTo($groupKey, $item, $itemKey = null)
+    public function push($value)
     {
-        $this->pushTo($groupKey, $item, $itemKey);
-        $this->set($groupKey, array_unique($this->get($groupKey)));
+        array_push($this->getArrayData(), $value);
         return $this;
     }
 
@@ -271,6 +234,28 @@ class DotArrayObject extends ArrayObject
     }
 
     /**
+     * @param string $groupKey
+     * @param mixed $item
+     * @param string|null $itemKey
+     * @return $this
+     */
+    public function pushUniqueTo($groupKey, $item, $itemKey = null)
+    {
+        $this->pushTo($groupKey, $item, $itemKey);
+        $this->set($groupKey, array_unique($this->get($groupKey)));
+        return $this;
+    }
+
+    /**
+     * @param mixed $offset
+     * @param mixed $value
+     */
+    public function put($offset, $value)
+    {
+        Arr::set($this->getArrayData(), $offset, $value);
+    }
+
+    /**
      * @param $groupKey
      * @param $value
      * @return $this
@@ -289,6 +274,35 @@ class DotArrayObject extends ArrayObject
             }
         }
         return $this;
+    }
+
+    /**
+     * @param $key
+     * @param $value
+     * @return $this
+     */
+    public function set($key, $value)
+    {
+        $this->put($key, $value);
+        return $this;
+    }
+
+    /**
+     * Get the instance as an array.
+     *
+     * @return array
+     */
+    public function toArray()
+    {
+        $dataArray = [];
+        foreach (parent::toArray() as $k => $v) {
+            if ($v instanceof Arrayable) {
+                $dataArray[$k] = $v->toArray();
+            } else {
+                $dataArray[$k] = $v;
+            }
+        }
+        return $dataArray;
     }
 
     public function toDottedArray()

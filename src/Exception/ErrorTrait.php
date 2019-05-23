@@ -2,10 +2,19 @@
 
 namespace Sayla\Exception;
 
+use Illuminate\Support\Str;
+
 trait ErrorTrait
 {
     public $context = [];
     protected $extra = [];
+
+    protected static function appendPreviousMessage($message, $previous) {
+        if ($previous) {
+            return Str::finish($message, '. ') . $previous->getMessage();
+        }
+        return $message;
+    }
 
     public function withContext($key, $data = null)
     {
@@ -17,9 +26,18 @@ trait ErrorTrait
         return $this;
     }
 
-    public function withExtra(...$messages)
+    public function appendMessage(...$messages)
     {
         $this->message .= ' ' . join('. ', $messages);
         return $this;
+    }
+
+    /**
+     * @param mixed ...$messages
+     * @deprecated use appendMessage
+     */
+    public function withExtra(...$messages)
+    {
+        return $this->appendMessage(...$messages);
     }
 }

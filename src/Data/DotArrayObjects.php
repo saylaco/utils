@@ -6,6 +6,8 @@ use Sayla\Helper\Data\Contract\AccessArrayItemsAsObjectProperties;
 class DotArrayObjects extends BaseHashMap
 {
     use AccessArrayItemsAsObjectProperties;
+    /** @var \Sayla\Data\DotArrayObject[] */
+    protected $items = [];
 
     /**
      * DotArrayHash constructor.

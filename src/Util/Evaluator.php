@@ -44,7 +44,7 @@ class Evaluator implements \ArrayAccess
             return $this->doEvaluation($expression, $this->properties->toArray());
         } catch (\Throwable $exception) {
             throw (new Error('Failed to evaluate ' . var_export($expression, true), $exception))
-                ->withExtra($exception->getMessage());
+                ->appendMessage($exception->getMessage());
         }
     }
 
