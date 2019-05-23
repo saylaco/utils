@@ -6,61 +6,11 @@ use Sayla\Helper\Data\BaseHashMap;
 
 class MixinSet extends BaseHashMap
 {
-    protected $aliases = [];
     private $callableMethods = [];
 
-    public static function fromObject($object, array $methods): self
+    public function add(Mixin $item)
     {
-        $set = new self();
-        $set->add($object, $methods);
-        return $set;
-    }
-
-    public function add(Mixin $item, array $methods = null)
-    {
-        $this->put(class_basename($item), $item, $methods);
-    }
-
-    /**
-     * @param string $name
-     * @param \Sayla\Util\Mixin\Mixin $item
-     * @param array|string[] $methods
-     */
-    public function put(string $name, Mixin $item, array $methods = null)
-    {
-        $this->items[$name] = $item;
-        if (!isset($methods)) {
-            $methods = get_class_methods($item);
-        }
-        foreach ($methods as $i => $methodName) {
-            if (starts_with($methodName, '__') && $methodName != '__invoke') continue;
-            $methodKey = !is_numeric($i) ? $i : $methodName;
-            if ($methodKey != $methodName) {
-                $this->aliases[$name][$methodKey] = $methodName;
-            }
-            $this->callableMethods[$methodKey] = $name;
-        }
-    }
-
-    public function addMethod(string $name, callable $callback)
-    {
-        $this->put($name, MixinMethod::make($callback), [$name => '__invoke']);
-    }
-
-    public function addStaticMethods(string $item, string $pattern)
-    {
-        foreach (get_class_methods($item) as $methodName)
-            if (str_is($pattern, $methodName)) {
-                $this->addMethod($methodName, [$item, $methodName]);
-            }
-    }
-
-    public function addMatchingMethods($item, string $pattern)
-    {
-        foreach (get_class_methods($item) as $methodName)
-            if (str_is($pattern, $methodName)) {
-                $this->addMethod($methodName, [$item, $methodName]);
-            }
+        $this->put(class_basename($item), $item);
     }
 
     public function call(string $methodName, array $arguments)
@@ -72,18 +22,7 @@ class MixinSet extends BaseHashMap
         } else {
             throw new \BadMethodCallException('Mixin not found - ' . $methodName);
         }
-        $realMethodName = $this->aliases[$mixinName][$methodName] ?? $methodName;
-        return call_user_func_array([$this[$mixinName], $realMethodName], $arguments);
-    }
-
-    protected function get(string $methodName): Mixin
-    {
-        return $this->items[$methodName];
-    }
-
-    public function getCallableMethods(): array
-    {
-        return array_keys($this->callableMethods);
+        return call_user_func_array([$this[$mixinName], $methodName], $arguments);
     }
 
     /**
@@ -92,5 +31,60 @@ class MixinSet extends BaseHashMap
     public function getIterator()
     {
         return new \ArrayIterator($this->items);
+    }
+
+    public function getMixinMethods()
+    {
+        $methods = [];
+        /** @var \ReflectionClass[] $reflectors */
+        $reflectors = [];
+        foreach ($this->callableMethods as $methodName => $mixinName) {
+            if (!isset($reflectors[$mixinName])) {
+                $reflectors[$mixinName] = new \ReflectionClass($this[$mixinName]);
+            }
+            $mixinReflection = $reflectors[$mixinName]->getMethod($methodName);
+            $parameters = [];
+            foreach ($mixinReflection->getParameters() as $reflectionParameter) {
+                $parameters[] = [
+                    'name' => $reflectionParameter->getName(),
+                    'type' => $reflectionParameter->hasType()
+                        ? qualify_var_type($reflectionParameter->getType()->getName())
+                        : null,
+                    'optional' => $reflectionParameter->isOptional()
+                ];
+            }
+            $methods[] = [
+                'name' => $methodName,
+                'class' => $reflectors[$mixinName]->getName(),
+                'methodName' => $mixinReflection->getName(),
+                'mixinName' => $mixinName,
+                'parameters' => $parameters,
+                'returnType' => $mixinReflection->hasReturnType()
+                    ? qualify_var_type($mixinReflection->getReturnType()->getName())
+                    : null,
+            ];
+        }
+        return $methods;
+    }
+
+    public function getMixinNames()
+    {
+       return array_keys($this->items);
+    }
+
+    public function put(string $name, Mixin $item)
+    {
+        $this->items[$name] = $item;
+        $methods = get_class_methods($item);
+        $prefixPos = array_search('getMixinMethodPrefix', $methods);
+        if ($prefixPos !== false) {
+            $prefix = array_pull($methods, $prefixPos);
+        }
+        foreach ($methods as $methodName) {
+            if (isset($prefix) && !starts_with($methodName, $prefix)) continue;
+            if (starts_with($methodName, '__')) continue;
+
+            $this->callableMethods[$methodName] = $name;
+        }
     }
 }
