@@ -1,10 +1,24 @@
 <?php
 
 
+use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Contracts\Support\Jsonable;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Collection;
 use Illuminate\Support\HtmlString;
+use Sayla\Util\JsonHelper;
 
+
+if (!function_exists('qualify_var_type')) {
+    /**
+     * @param string $type
+     * @return string
+     */
+    function qualify_var_type(string $type, string $namespace = null)
+    {
+        $type = str_contains($type, '\\') ? str_start($type, '\\') : $type;
+        return $namespace && !starts_with($type, '\\') ? str_finish($namespace, '\\') . $type : $type;
+    }
+}
 if (!function_exists('make_new_instance')) {
     /**
      * @param $class
@@ -60,6 +74,19 @@ if (!function_exists('array_rekey')) {
     }
 }
 
+
+if (!function_exists('array_replace_key')) {
+    function array_replace_key($items, $propertyName, $prefix = null)
+    {
+        $newKeys = array_map(function ($key) use ($prefix, $items, $propertyName) {
+            return value($prefix)
+                . (is_string($propertyName)
+                    ? ($items[$key][$propertyName] ?? $items[$key]->$propertyName)
+                    : $propertyName($items[$key]));
+        }, array_keys($items));
+        return array_combine($newKeys, $items);
+    }
+}
 if (!function_exists('var_str')) {
     /**
      * Runs var_export against the data but converts arrays to the short array syntax
@@ -158,5 +185,94 @@ if (!function_exists('capture_output')) {
         ob_start();
         call_user_func($callable);
         return ob_get_clean() ?: '';
+    }
+}
+
+if (!function_exists('simple_value')) {
+    /**
+     * @param $value
+     * @return array|mixed
+     */
+    function simple_value($value)
+    {
+        if (is_array($value)) {
+            return $value;
+        } elseif ($value instanceof JsonSerializable) {
+            return $value->jsonSerialize();
+        } elseif ($value instanceof Arrayable) {
+            return $value->toArray();
+        } elseif ($value instanceof Jsonable) {
+            return JsonHelper::decode($value->toJson(), true);
+        } elseif (!is_scalar($value)) {
+            return JsonHelper::encodeDecodeToArray($value);
+        }
+        return $value;
+    }
+}
+
+if (!function_exists('scalarize')) {
+    /**
+     * @param $value
+     * @return array|mixed
+     */
+    function scalarize($value)
+    {
+        $simpleValue = simple_value($value);
+        if (is_iterable($simpleValue)) {
+            foreach ($simpleValue as $k => $v) {
+                $simpleValue[$k] = scalarize($v);
+            }
+        }
+        return $simpleValue;
+    }
+}
+
+if (!function_exists('class_parent_namespace')) {
+    function class_parent_namespace(string $className): string
+    {
+        $parts = array_slice(explode("\\", trim($className, "\\")), 0, -1);
+        return join("\\", $parts);
+    }
+}
+if (!function_exists('class_root_namespace')) {
+    function class_root_namespace(string $className): string
+    {
+        $parts = explode("\\", trim($className, "\\"));
+        return head($parts);
+    }
+}
+
+if (!function_exists('array_undot')) {
+    function array_undot(array $array): array
+    {
+        $undotted = [];
+        foreach ($array as $key => $value) {
+            array_set($undotted, $key, $value);
+        }
+        return $undotted;
+    }
+}
+
+if (!function_exists('abs_path')) {
+    function abs_path(string $path, string $directory = null): string
+    {
+        if (!$directory) {
+            $directory = paths()->getBasePath();
+        }
+        if (starts_with($path, DIRECTORY_SEPARATOR)) {
+            return $path;
+        }
+        return rtrim($directory, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . ltrim($path, DIRECTORY_SEPARATOR);
+    }
+}
+
+if (!function_exists('rel_path')) {
+    function rel_path(string $path, string $directory = null): string
+    {
+        if (!$directory) {
+            $directory = paths()->getBasePath();
+        }
+        $directory = str_finish($directory, DIRECTORY_SEPARATOR);
+        return str_after($path, $directory);
     }
 }

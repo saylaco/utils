@@ -7,7 +7,7 @@ class DotArrayObjects extends BaseHashMap
 {
     use AccessArrayItemsAsObjectProperties;
     /** @var \Sayla\Data\DotArrayObject[] */
-    protected $items;
+    protected $items = [];
 
     /**
      * DotArrayHash constructor.

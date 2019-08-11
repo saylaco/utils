@@ -6,9 +6,9 @@
   ],
   "require": {
     "php": ">=7.1",
-    "illuminate/contracts": "^5",
-    "illuminate/support": "^5",
-    "sayla/data-helper": "2.*"
+    "illuminate/contracts": "^5.5",
+    "illuminate/support": "^5.5",
+    "sayla/data-helper": "^2"
   },
   "require-dev": {
   },

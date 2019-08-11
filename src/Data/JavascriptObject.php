@@ -2,11 +2,13 @@
 
 namespace Sayla\Data;
 
-use Illuminate\Support\Arr;
-use Illuminate\Support\Collection;
+use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Contracts\Support\Jsonable;
+use Illuminate\Contracts\Support\Responsable;
+use Sayla\Contract\Scriptable;
 use Sayla\Util\Raw;
 
-class JavascriptObject extends DotArrayObject
+class JavascriptObject extends DotArrayObject implements Scriptable, Responsable
 {
     private $forceToObject = null;
 
@@ -19,25 +21,31 @@ class JavascriptObject extends DotArrayObject
         if ($data instanceof Raw) {
             return $data->getValue();
         }
-        if ($data instanceof self) {
+        if ($data instanceof Scriptable) {
             return $data->toJavascript();
         }
-        if (is_string($data)) {
-            return starts_with($data, ['[', '{', '\'', '"', 'false', 'true', 'null']) ? $data : '"' . $data . '"';
+        if ($data instanceof Jsonable) {
+            return $data->toJson();
         }
-        if (is_object($data) || Arr::accessible($data)) {
+        if ($data instanceof \JsonSerializable) {
+            return self::convertToJavascript($data->jsonSerialize());
+        }
+        if ($data instanceof Arrayable) {
+            return self::convertToJavascript($data->toArray());
+        }
+        $data = simple_value($data);
+        if (is_string($data)) {
+            return starts_with($data, ['[', '{', '\'', '"', 'false', 'true', 'null', 'undefined'])
+                ? $data
+                : '"' . $data . '"';
+        }
+        if (is_iterable($data)) {
             if ($isObject == true) {
                 $isArray = false;
             } else {
                 $isArray = null;
             }
             $js = [];
-            if ($data instanceof Collection) {
-                return $data->toJson();
-            }
-            if ($data instanceof \JsonSerializable) {
-                $data = $data->jsonSerialize();
-            }
             foreach ($data as $k => $v) {
                 if ($isArray === null) {
                     $isArray = is_numeric($k);
@@ -48,11 +56,6 @@ class JavascriptObject extends DotArrayObject
             return ($isArray ? '[' : '{') . join(', ', $js) . ($isArray ? ']' : '}');
         }
         return var_str($data);
-    }
-
-    public function toJavascript()
-    {
-        return self::convertToJavascript($this->getArrayData(), $this->forceToObject ?? false);
     }
 
     public function __toString()
@@ -80,5 +83,15 @@ class JavascriptObject extends DotArrayObject
     {
         parent::set($key, new Raw($data));
         return $this;
+    }
+
+    public function toJavascript(): string
+    {
+        return self::convertToJavascript($this->getArrayData(), $this->forceToObject ?? false);
+    }
+
+    public function toResponse($request)
+    {
+        return new \Illuminate\Http\JsonResponse($this);
     }
 }

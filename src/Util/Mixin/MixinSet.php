@@ -33,6 +33,45 @@ class MixinSet extends BaseHashMap
         return new \ArrayIterator($this->items);
     }
 
+    public function getMixinMethods()
+    {
+        $methods = [];
+        /** @var \ReflectionClass[] $reflectors */
+        $reflectors = [];
+        foreach ($this->callableMethods as $methodName => $mixinName) {
+            if (!isset($reflectors[$mixinName])) {
+                $reflectors[$mixinName] = new \ReflectionClass($this[$mixinName]);
+            }
+            $mixinReflection = $reflectors[$mixinName]->getMethod($methodName);
+            $parameters = [];
+            foreach ($mixinReflection->getParameters() as $reflectionParameter) {
+                $parameters[] = [
+                    'name' => $reflectionParameter->getName(),
+                    'type' => $reflectionParameter->hasType()
+                        ? qualify_var_type($reflectionParameter->getType()->getName())
+                        : null,
+                    'optional' => $reflectionParameter->isOptional()
+                ];
+            }
+            $methods[] = [
+                'name' => $methodName,
+                'class' => $reflectors[$mixinName]->getName(),
+                'methodName' => $mixinReflection->getName(),
+                'mixinName' => $mixinName,
+                'parameters' => $parameters,
+                'returnType' => $mixinReflection->hasReturnType()
+                    ? qualify_var_type($mixinReflection->getReturnType()->getName())
+                    : null,
+            ];
+        }
+        return $methods;
+    }
+
+    public function getMixinNames()
+    {
+       return array_keys($this->items);
+    }
+
     public function put(string $name, Mixin $item)
     {
         $this->items[$name] = $item;

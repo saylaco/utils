@@ -3,7 +3,7 @@
 namespace Sayla\Util\Mixin;
 /**
  * Interface Mixin
- * @method string getMixinMethodPrefix()
+ * @method? string getMixinMethodPrefix()
  */
 interface Mixin
 {

@@ -4,11 +4,12 @@ namespace Sayla\Exception;
 
 class RecordNotFound extends Error
 {
+    const ERROR_CODE = 0;
     protected static $defaultEntityName = 'Record';
 
     public function __construct($identifier, string $entityName = null, $previous = null)
     {
-        parent::__construct($this->makeMessage($identifier, $entityName), static::$classCode, $previous);
+        parent::__construct($this->makeMessage($identifier, $entityName), static::ERROR_CODE, $previous);
     }
 
     /**
